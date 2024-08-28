@@ -105,4 +105,14 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn full_rsa_process_for_2048_bits_and_msg_RSA_signing() {
+        let (e, d, n) = SigAlg::generate_key_pair(1024);
+        let msg = "RSA signing";
+
+        let sign = SigAlg::sign_message(msg, &n, &d);
+        assert!(SigAlg::verify_signature(msg, &sign, &n, &e));
+    }
 }

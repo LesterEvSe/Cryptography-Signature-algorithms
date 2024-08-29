@@ -2,10 +2,11 @@ use crate::ec_ops::{EcOps, Point};
 use num_bigint::BigUint;
 use num_traits::One;
 use rand::{rngs::OsRng, RngCore};
+use sha2::{Digest, Sha256};
 
 pub struct ECDSA {
     curve: EcOps,
-    G: Point,
+    g: Point,
     n: BigUint,
 }
 
@@ -13,13 +14,12 @@ impl ECDSA {
     pub fn new(curve: EcOps, generator: Point, generator_order: BigUint) -> ECDSA {
         ECDSA {
             curve,
-            G: generator,
+            g: generator,
             n: generator_order,
         }
     }
 
-    // Q, d
-    pub fn generate_key_pair(&self) -> (Point, BigUint) {
+    fn generate_random_num(&self) -> BigUint {
         let mut rng = OsRng;
         let num_bytes = self.n.to_bytes_le().len();
         let mut d;
@@ -30,15 +30,30 @@ impl ECDSA {
             d = BigUint::from_bytes_le(bytes.as_slice());
 
             if d >= BigUint::one() && d < self.n {
-                break;
+                return d;
             }
         }
-        (self.curve.point_mul(&d, self.G.clone()), d)
+    }
+
+    // Q, d
+    pub fn generate_key_pair(&self) -> (Point, BigUint) {
+        let d = self.generate_random_num();
+        (self.curve.point_mul(&d, self.g.clone()), d)
     }
 
     // (r, s)
     pub fn sign_message(&self, msg: &str, d: &BigUint) -> (BigUint, BigUint) {
-        todo!()
+        let mut hasher = Sha256::new();
+        hasher.update(msg);
+        let hashed = hasher.finalize();
+
+        let e = BigUint::from_bytes_le(&hashed);
+        let k = self.generate_random_num();
+        let (r, _) = self.curve.point_mul(&k, self.g.clone());
+        let r = r % self.n.clone();
+
+        let s = k.modinv(&self.n).unwrap();
+        (r.clone(), (s * (e + r * d)) % self.n.clone())
     }
 
     pub fn verify_signature(
@@ -46,9 +61,24 @@ impl ECDSA {
         msg: &str,
         r: &BigUint,
         s: &BigUint,
-        Q: &(BigUint, BigUint),
+        q: &(BigUint, BigUint),
     ) -> bool {
-        todo!()
+        assert!(*r >= BigUint::one() && *r < self.n);
+        assert!(*s >= BigUint::one() && *s < self.n);
+
+        let mut hasher = Sha256::new();
+        hasher.update(msg);
+        let hashed = hasher.finalize();
+        let e = BigUint::from_bytes_le(&hashed);
+
+        let w = s.modinv(&self.n).unwrap();
+        let u1 = (e * w.clone()) % self.n.clone();
+        let u2 = (r * w) % self.n.clone();
+
+        let a = self.curve.point_mul(&u1, self.g.clone());
+        let b = self.curve.point_mul(&u2, q.clone());
+        let (x, _) = self.curve.point_add(&a, &b);
+        x % self.n.clone() == *r
     }
 }
 

@@ -11,20 +11,23 @@ impl EcOps {
         EcOps { p: field }
     }
 
+    fn sub(&self, a: &BigUint, b: &BigUint) -> BigUint {
+        return (a + self.p.clone() - b) % self.p.clone();
+    }
+
     fn mul(&self, a: &BigUint, b: &BigUint) -> BigUint {
         (a * b) % self.p.clone()
     }
 
-    fn sub(&self, a: &BigUint, b: &BigUint) -> BigUint {
-        return (a + self.p.clone() - b) % self.p.clone();
+    fn div(&self, a: &BigUint, b: &BigUint) -> BigUint {
+        (self.mul(&a, &b.modinv(&self.p).unwrap())) % self.p.clone()
     }
 
     pub fn point_add(&self, p0: &Point, p1: &Point) -> Point {
         let (x0, y0) = p0;
         let (x1, y1) = p1;
 
-        let temp = self.sub(x1, x0).modinv(&self.p).unwrap();
-        let lambda = self.mul(&self.sub(y1, y0), &temp);
+        let lambda = self.div(&self.sub(y1, y0), &self.sub(x1, x0));
         let x2 = self.sub(&self.sub(&self.mul(&lambda, &lambda), &x0), &x1);
         let y2 = self.sub(&self.mul(&lambda, &self.sub(&x0, &x2)), &y0);
         (x2, y2)
@@ -35,8 +38,7 @@ impl EcOps {
         let two = BigUint::from(2_u32);
         let three = BigUint::from(3_u32);
 
-        let temp = self.mul(&three, &self.mul(&x, &x));
-        let lambda = self.mul(&temp, &self.mul(&two, &y).modinv(&self.p).unwrap());
+        let lambda = self.div(&self.mul(&three, &self.mul(&x, &x)), &self.mul(&two, &y));
         let x3 = self.sub(&self.mul(&lambda, &lambda), &self.mul(&two, &x));
         let y3 = self.sub(&self.mul(&lambda, &self.sub(&x, &x3)), &y);
         (x3, y3)

@@ -1,8 +1,8 @@
 use num_bigint::BigUint;
 
-type Point = (BigUint, BigUint);
+pub type Point = (BigUint, BigUint);
 
-struct EcOps {
+pub struct EcOps {
     p: BigUint,
 }
 
@@ -42,7 +42,7 @@ impl EcOps {
         (x3, y3)
     }
 
-    pub fn point_mul(&self, scalar: BigUint, mut p: Point) -> Point {
+    pub fn point_mul(&self, scalar: &BigUint, mut p: Point) -> Point {
         let bytes = scalar.to_bytes_le();
         let mut res = (BigUint::ZERO, BigUint::ZERO);
         let mut first_add = true;
@@ -149,6 +149,7 @@ mod tests {
             47, 252, 255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         ]));
+
         let p = (
             BigUint::from_bytes_le(&[
                 101, 11, 128, 176, 13, 25, 162, 54, 17, 77, 197, 73, 188, 255, 42, 31, 192, 205,
@@ -164,7 +165,7 @@ mod tests {
             89, 238, 168, 79, 31, 88, 139, 95, 113, 61, 66, 155, 81,
         ]);
 
-        let actual_p = secp256k1.point_mul(scalar, p);
+        let actual_p = secp256k1.point_mul(&scalar, p);
         let expected_p = (
             BigUint::from_bytes_le(&[
                 48, 88, 229, 103, 12, 29, 111, 98, 30, 92, 164, 115, 100, 166, 197, 252, 69, 231,

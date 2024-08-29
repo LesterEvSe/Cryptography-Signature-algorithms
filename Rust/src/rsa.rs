@@ -1,4 +1,3 @@
-use crate::sig_alg::SigAlg;
 use num_bigint::BigUint;
 use num_primes::Generator;
 use num_traits::One;
@@ -6,11 +5,8 @@ use sha2::{Digest, Sha256};
 
 pub struct RSA;
 
-impl SigAlg for RSA {
-    type KeyPair = (BigUint, BigUint, BigUint);
-    type Signature = BigUint;
-
-    fn generate_key_pair(bits: usize) -> Self::KeyPair {
+impl RSA {
+    pub fn generate_key_pair(bits: usize) -> (BigUint, BigUint, BigUint) {
         assert!(bits >= 256);
         let p = Generator::new_prime(bits);
         let q = Generator::new_prime(bits);
@@ -26,7 +22,7 @@ impl SigAlg for RSA {
         (e, d, n)
     }
 
-    fn sign_message(msg: &str, n: &BigUint, d: &BigUint) -> Self::Signature {
+    pub fn sign_message(msg: &str, n: &BigUint, d: &BigUint) -> BigUint {
         let mut hasher = Sha256::new();
         hasher.update(msg);
         let hashed = hasher.finalize();
@@ -35,7 +31,7 @@ impl SigAlg for RSA {
         res.modpow(d, n)
     }
 
-    fn verify_signature(msg: &str, sign: &BigUint, n: &BigUint, e: &BigUint) -> bool {
+    pub fn verify_signature(msg: &str, sign: &BigUint, n: &BigUint, e: &BigUint) -> bool {
         let mut hasher = Sha256::new();
         hasher.update(msg);
         let hashed = hasher.finalize();

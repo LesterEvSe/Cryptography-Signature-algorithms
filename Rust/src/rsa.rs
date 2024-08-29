@@ -1,11 +1,16 @@
+use crate::sig_alg::SigAlg;
 use num_bigint::BigUint;
 use num_primes::Generator;
 use num_traits::One;
+use sha2::{Digest, Sha256};
 
-pub struct SigAlg;
+pub struct RSA;
 
-impl SigAlg {
-    pub fn generate_key_pair(bits: usize) -> (BigUint, BigUint, BigUint) {
+impl SigAlg for RSA {
+    type KeyPair = (BigUint, BigUint, BigUint);
+    type Signature = BigUint;
+
+    fn generate_key_pair(bits: usize) -> Self::KeyPair {
         assert!(bits >= 256);
         let p = Generator::new_prime(bits);
         let q = Generator::new_prime(bits);
@@ -21,16 +26,22 @@ impl SigAlg {
         (e, d, n)
     }
 
-    pub fn sign_message(msg: &str, n: &BigUint, d: &BigUint) -> BigUint {
-        let hashed = sha256::digest(msg);
-        let res = BigUint::from_bytes_le(hashed.as_bytes());
+    fn sign_message(msg: &str, n: &BigUint, d: &BigUint) -> Self::Signature {
+        let mut hasher = Sha256::new();
+        hasher.update(msg);
+        let hashed = hasher.finalize();
+
+        let res = BigUint::from_bytes_le(&hashed);
         res.modpow(d, n)
     }
 
-    pub fn verify_signature(msg: &str, sign: &BigUint, n: &BigUint, e: &BigUint) -> bool {
-        let hashed = sha256::digest(msg);
+    fn verify_signature(msg: &str, sign: &BigUint, n: &BigUint, e: &BigUint) -> bool {
+        let mut hasher = Sha256::new();
+        hasher.update(msg);
+        let hashed = hasher.finalize();
+
         let actual = sign.modpow(e, n);
-        hashed.as_bytes() == actual.to_bytes_le()
+        BigUint::from_bytes_le(&hashed) == actual
     }
 }
 
@@ -109,10 +120,10 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn full_rsa_process_for_2048_bits_and_msg_RSA_signing() {
-        let (e, d, n) = SigAlg::generate_key_pair(1024);
+        let (e, d, n) = RSA::generate_key_pair(1024);
         let msg = "RSA signing";
 
-        let sign = SigAlg::sign_message(msg, &n, &d);
-        assert!(SigAlg::verify_signature(msg, &sign, &n, &e));
+        let sign = RSA::sign_message(msg, &n, &d);
+        assert!(RSA::verify_signature(msg, &sign, &n, &e));
     }
 }

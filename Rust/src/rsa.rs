@@ -1,7 +1,7 @@
 use num_bigint::BigUint;
 use num_primes::Generator;
 use num_traits::One;
-use sha2::{Digest, Sha256};
+use sha256::digest;
 
 pub struct RSA;
 
@@ -23,21 +23,15 @@ impl RSA {
     }
 
     pub fn sign_message(msg: &str, n: &BigUint, d: &BigUint) -> BigUint {
-        let mut hasher = Sha256::new();
-        hasher.update(msg);
-        let hashed = hasher.finalize();
-
-        let res = BigUint::from_bytes_le(&hashed);
+        let hashed = digest(msg);
+        let res = BigUint::from_bytes_le(hashed.as_bytes());
         res.modpow(d, n)
     }
 
     pub fn verify_signature(msg: &str, sign: &BigUint, n: &BigUint, e: &BigUint) -> bool {
-        let mut hasher = Sha256::new();
-        hasher.update(msg);
-        let hashed = hasher.finalize();
-
+        let hashed = digest(msg);
         let actual = sign.modpow(e, n);
-        BigUint::from_bytes_le(&hashed) == actual
+        BigUint::from_bytes_le(hashed.as_bytes()) == actual
     }
 }
 
@@ -112,6 +106,15 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn maybe_orig_sha256() {
+        // abc
+        let input = &[97, 98, 99];
+        let val = digest(input);
+        assert_eq!(val, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    }
+
 
     #[test]
     #[allow(non_snake_case)]

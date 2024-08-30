@@ -2,7 +2,7 @@ use crate::ec_ops::{EcOps, Point};
 use num_bigint::BigUint;
 use num_traits::One;
 use rand::{rngs::OsRng, RngCore};
-use sha2::{Digest, Sha256};
+use sha256::digest;
 
 pub struct ECDSA {
     curve: EcOps,
@@ -43,11 +43,9 @@ impl ECDSA {
 
     // (r, s)
     pub fn sign_message(&self, msg: &str, d: &BigUint) -> (BigUint, BigUint) {
-        let mut hasher = Sha256::new();
-        hasher.update(msg);
-        let hashed = hasher.finalize();
+        let hashed = digest(msg);
+        let e = BigUint::from_bytes_le(hashed.as_bytes());
 
-        let e = BigUint::from_bytes_le(&hashed);
         let k = self.generate_random_num();
         let (r, _) = self.curve.point_mul(&k, self.g.clone());
         let r = r % self.n.clone();
@@ -66,10 +64,8 @@ impl ECDSA {
         assert!(*r >= BigUint::one() && *r < self.n);
         assert!(*s >= BigUint::one() && *s < self.n);
 
-        let mut hasher = Sha256::new();
-        hasher.update(msg);
-        let hashed = hasher.finalize();
-        let e = BigUint::from_bytes_le(&hashed);
+        let hashed = digest(msg);
+        let e = BigUint::from_bytes_le(hashed.as_bytes());
 
         let w = s.modinv(&self.n).unwrap();
         let u1 = (e * w.clone()) % self.n.clone();

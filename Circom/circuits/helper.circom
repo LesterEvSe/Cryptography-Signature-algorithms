@@ -1,7 +1,7 @@
 pragma circom 2.1.6;
 
 include "../node_modules/circomlib/circuits/comparators.circom";
-include "BigInt.circom";
+include "../bigInt/bigInt.circom";
 
 // sha256(msg) to u64 4
 // Get sha256 bits in Big-Endian format

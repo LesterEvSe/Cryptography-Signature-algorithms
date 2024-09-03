@@ -21,10 +21,12 @@ def bigint_to_array(n, k, x):
     return ret
 
 def jsonify_and_save(msg_hash, signature, pubkey, filename='../Circom/circuits/input_ecdsa.json'):
+    bits = 43
+    blocks = 6
     data = {
-        "message":  bigint_to_array(64, 4, msg_hash),
-        "sign":     [bigint_to_array(64, 4, elem) for elem in signature],
-        "pubkey":   [bigint_to_array(64, 4, elem) for elem in pubkey],
+        "message":  bigint_to_array(bits, blocks, msg_hash),
+        "sign":     [bigint_to_array(bits, blocks, elem) for elem in signature],
+        "pubkey":   [bigint_to_array(bits, blocks, elem) for elem in pubkey],
     }
     
     # Convert the data to a JSON string
@@ -74,8 +76,11 @@ if __name__ == "__main__":
     (r, s) = sign_message(msg, d)
     assert(verify_signature(msg, r, s, Q))
 
-    print(bigint_to_array(64, 4, int(r)))
-    print(bigint_to_array(64, 4, int(s)))
+    bits = 43
+    blocks = 6
+    print([bigint_to_array(bits, blocks, int(G[i])) for i in range(2)])
+    print(bigint_to_array(bits, blocks, ORDER))
+    print(bigint_to_array(bits, blocks, 65_537))
 
     '''
     Q = (int(Q[0]), int(Q[1]))

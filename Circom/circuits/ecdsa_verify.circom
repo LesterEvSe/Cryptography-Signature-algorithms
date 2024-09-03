@@ -1,6 +1,5 @@
 pragma circom 2.1.6;
 
-//include "BigInt.circom";
 include "../ecdsa/secp256r1/p256.circom";
 
 template EcdsaVerify(BITS, BLOCKS) {
@@ -9,6 +8,7 @@ template EcdsaVerify(BITS, BLOCKS) {
     signal input pubkey[2][BLOCKS];
     signal output IsVerified;
 
+    // secp256r1
     signal e[BLOCKS] <== [65537, 0, 0, 0, 0, 0];
     signal order[BLOCKS] <== [3036481267025, 3246200354617, 7643362670236, 8796093022207, 1048575, 2199023255040];
     signal G[2][BLOCKS] <== [
@@ -39,7 +39,7 @@ template EcdsaVerify(BITS, BLOCKS) {
 
     component u2Q = P256ScalarMult(BITS, BLOCKS);
     u2Q.scalar <== u2.out;
-    u2Q.point <== sign;
+    u2Q.point <== pubkey;
 
     component R = P256AddUnequal(BITS, BLOCKS);
     R.point1 <== u1G.out;

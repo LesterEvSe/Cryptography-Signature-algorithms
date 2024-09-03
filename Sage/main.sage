@@ -2,6 +2,8 @@ import hashlib
 import json
 load('constants.sage')
 
+BITS = 43
+BLOCKS = 6
 
 def bigint_to_array(n, k, x):
     # Initialize mod to 1 (Python's int can handle arbitrarily large numbers)
@@ -66,6 +68,9 @@ def verify_signature(msg, r, s, Q):
     u1 = int(e * w) % ORDER
     u2 = int(r * w) % ORDER
 
+    temp = u1 * G
+    print([bigint_to_array(BITS, BLOCKS, int(temp[i])) for i in range(2)])
+
     R = u1 * G + u2 * Q
     return int(R[0]) % ORDER == r
 
@@ -75,12 +80,12 @@ if __name__ == "__main__":
     (Q, d) = generate_key_pair()
     (r, s) = sign_message(msg, d)
     assert(verify_signature(msg, r, s, Q))
-
-    bits = 43
-    blocks = 6
+    
+    '''
     print([bigint_to_array(bits, blocks, int(G[i])) for i in range(2)])
     print(bigint_to_array(bits, blocks, ORDER))
     print(bigint_to_array(bits, blocks, 65_537))
+    '''
 
     '''
     Q = (int(Q[0]), int(Q[1]))

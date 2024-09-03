@@ -33,9 +33,9 @@ template EcdsaVerify(BITS, BLOCKS) {
     u2.p <== order;
 
     // R = u1*G + u2*sign
-    component u1G = P256ScalarMult(BITS, BLOCKS);
+    component u1G = P256GeneratorMultiplication(BITS, BLOCKS);
     u1G.scalar <== u1.out;
-    u1G.point <== G;
+    // u1G.point <== G;
 
     component u2Q = P256ScalarMult(BITS, BLOCKS);
     u2Q.scalar <== u2.out;

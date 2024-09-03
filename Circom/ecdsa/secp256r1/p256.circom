@@ -1,6 +1,7 @@
 pragma circom 2.1.5;
 
 include "../brainpoolP256r1/circom-pairing/curve.circom";
+include "../../node_modules/circomlib/circuits/multiplexer.circom";
 include "p256_func.circom";
 include "p256_pows.circom";
 
@@ -135,7 +136,6 @@ template GetP256Generator(n,k){
 
 }
 
-/*
 template P256GeneratorMultiplication(n,k){
     var stride = 8;
     signal input scalar[k];
@@ -242,4 +242,3 @@ template P256GeneratorMultiplication(n,k){
         }
     }
 }
-*/
